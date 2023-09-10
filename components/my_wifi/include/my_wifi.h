@@ -9,4 +9,8 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
+/* Requires:
+    esp_netif_init()
+    esp_event_loop_create_default()
+*/
 bool wifi_init(void);
