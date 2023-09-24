@@ -23,6 +23,10 @@ static const char *REST_TAG = "esp-rest";
 #define SCRATCH_BUFSIZE (10240)
 #define MDNS_INSTANCE "esp home web server"
 
+extern const uint8_t index_html_start[] asm("_binary_index_html_start");
+extern const uint8_t favicon_start[] asm("_binary_favicon_png_start");
+extern const uint8_t favicon_end[]   asm("_binary_favicon_png_end");
+
 void initialise_mdns(const char *hostName)
 {
     mdns_init();
@@ -87,20 +91,16 @@ static esp_err_t light_brightness_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-/* Simple handler for getting system handler */
-static esp_err_t system_info_get_handler(httpd_req_t *req)
+static esp_err_t index_get_handler(httpd_req_t *req)
 {
-    httpd_resp_set_type(req, "application/json");
-    cJSON *root = cJSON_CreateObject();
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    cJSON_AddStringToObject(root, "version", IDF_VER);
-    cJSON_AddNumberToObject(root, "cores", chip_info.cores);
-    const char *sys_info = cJSON_Print(root);
-    httpd_resp_sendstr(req, sys_info);
-    free((void *)sys_info);
-    cJSON_Delete(root);
-    return ESP_OK;
+    httpd_resp_set_type(req, "text/html; charset=utf-8");
+    return httpd_resp_sendstr(req, (const char *)index_html_start);
+}
+
+static esp_err_t favicon_get_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "image/png");
+    return httpd_resp_send(req, (const char *)favicon_start, (favicon_end - favicon_start));
 }
 
 /* Simple handler for getting temperature data */
@@ -128,14 +128,23 @@ esp_err_t start_rest_server()
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
     REST_CHECK(httpd_start(&server, &config) == ESP_OK, "Start server failed", err_start);
 
-    /* URI handler for fetching system info */
-    httpd_uri_t system_info_get_uri = {
-        .uri = "/api/v1/system/info",
+    /* URI handler for landing page html */
+    httpd_uri_t index_get_uri = {
+        .uri = "/",
         .method = HTTP_GET,
-        .handler = system_info_get_handler,
+        .handler = index_get_handler,
         .user_ctx = rest_context
     };
-    httpd_register_uri_handler(server, &system_info_get_uri);
+    httpd_register_uri_handler(server, &index_get_uri);
+
+    /* URI handler for favicon */
+    httpd_uri_t favicon_get_uri = {
+        .uri = "/favicon.png",
+        .method = HTTP_GET,
+        .handler = favicon_get_handler,
+        .user_ctx = rest_context
+    };
+    httpd_register_uri_handler(server, &favicon_get_uri);
 
     /* URI handler for fetching temperature data */
     httpd_uri_t temperature_data_get_uri = {

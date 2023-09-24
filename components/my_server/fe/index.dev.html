@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Laiptinės LED valdymas</title>
+    <meta charset="UTF-8">
+    <style>
+        /* Add your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            margin: 20px;
+        }
+        .button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #brightnessSlider {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Laiptinės LED valdymas</h1>
+    <div class="container">
+        <h2 id="header-brightness">Šviesumas</h2>
+        <input type="range" min="0" max="255" value="25" class="slider" id="brightnessSlider">
+        <p>Šviesumas: <span id="brightnessValue">50</span>%</p>
+        <button class="button" id="level0">Išjungta</button>
+        <button class="button" id="level1">Žemas</button>
+        <button class="button" id="level2">Vidutinis</button>
+        <button class="button" id="level3">Aukštas</button>
+        <button class="button" id="level4">Ultra</button>
+        <h2>Automatinis Režimas</h2>
+        <label for="autoModeToggle">Įjungti / Išjungti:</label>
+        <input type="checkbox" id="autoModeToggle">
+    </div>
+
+    <!-- JavaScript to handle the controls -->
+    <script>
+// Get references to HTML elements
+const brightnessSlider = document.getElementById("brightnessSlider");
+const brightnessValue = document.getElementById("brightnessValue");
+const level0Button = document.getElementById("level0");
+const level1Button = document.getElementById("level1");
+const level2Button = document.getElementById("level2");
+const level3Button = document.getElementById("level3");
+const level4Button = document.getElementById("level4");
+const autoModeToggle = document.getElementById("autoModeToggle");
+const headerBrightness = document.getElementById("header-brightness");
+
+const updateBrightness = function (value) {
+  const rangeSize = parseInt(brightnessSlider.max) + 1;
+  console.log(rangeSize, brightnessSlider.max);
+  brightnessValue.textContent = Math.ceil(
+    (100.0 * brightnessSlider.value) / rangeSize
+  );
+};
+
+// Update brightness value when the slider changes
+brightnessSlider.addEventListener("input", function () {
+  updateBrightness(brightnessSlider.value);
+});
+
+// Set brightness level to predefined values when buttons are clicked
+level0Button.addEventListener("click", function () {
+  brightnessSlider.value = 0;
+  updateBrightness(brightnessSlider.value);
+});
+
+level1Button.addEventListener("click", function () {
+  // Set brightness to a predefined low level (e.g., 25%)
+  brightnessSlider.value = 64;
+  updateBrightness(brightnessSlider.value);
+});
+
+level2Button.addEventListener("click", function () {
+  // Set brightness to a predefined medium level (e.g., 50%)
+  brightnessSlider.value = 128;
+  updateBrightness(brightnessSlider.value);
+});
+
+level3Button.addEventListener("click", function () {
+  // Set brightness to a predefined high level (e.g., 75%)
+  brightnessSlider.value = 192;
+  updateBrightness(brightnessSlider.value);
+});
+
+level4Button.addEventListener("click", function () {
+  // Set brightness to a predefined ultra level (e.g., 100%)
+  brightnessSlider.value = 255;
+  updateBrightness(brightnessSlider.value);
+});
+
+// Toggle auto mode when the checkbox is clicked
+autoModeToggle.addEventListener("change", function () {
+  const isChecked = autoModeToggle.checked;
+  if (isChecked) {
+    headerBrightness.textContent = "Maksimalus šviesumas";
+  } else {
+    headerBrightness.textContent = "Šviesumas";
+  }
+});
+    </script>
+</body>
+</html>
+
