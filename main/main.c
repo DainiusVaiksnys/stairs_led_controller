@@ -8,6 +8,7 @@
 
 #include "my_wifi.h"
 #include "my_server.h"
+#include "led_driver.h"
 
 static const char *TAG = "led_controller";
 
@@ -33,4 +34,6 @@ void app_main(void)
     } else {
     	ESP_LOGE(TAG, "Continuing without web interface.");
     }
+
+    led_driver_init(1200);
 }
