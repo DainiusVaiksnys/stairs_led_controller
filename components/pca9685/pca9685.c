@@ -347,67 +347,28 @@ void pca9685_setOscillatorFrequency(uint32_t freq) {
 
 /******************* Low level I2C interface */
 esp_err_t read8(uint8_t device, uint8_t addr, uint8_t *byte) {
-  return readTwoBytes(device, addr, byte, NULL);
+    return i2c_master_write_read_device(_i2c_port, device, &addr, 1, byte, 1, I2C_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
 esp_err_t readTwoBytes(uint8_t device, uint8_t addr, uint8_t *byte1, uint8_t *byte2) {
-    esp_err_t ret;
-
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (device << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, addr, ACK_CHECK_EN);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(_i2c_port, cmd, I2C_TIMEOUT_MS/portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
-    if (ret != ESP_OK) {
-        return ret;
+    static uint8_t readBuffer[2]; 
+    esp_err_t ret = i2c_master_write_read_device(_i2c_port, device, &addr, 1, readBuffer, 2, I2C_TIMEOUT_MS / portTICK_PERIOD_MS);
+    if (ret == ESP_OK) {
+        *byte1 = readBuffer[0];
+        *byte2 = readBuffer[1];
     }
-    cmd = i2c_cmd_link_create();
 
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, addr << 1 | I2C_MASTER_READ, ACK_CHECK_EN);
-    i2c_master_read_byte(cmd, byte1, ACK_VAL);
-    if (byte2) {
-        i2c_master_read_byte(cmd, byte2, NACK_VAL);
-    }
-    i2c_master_stop(cmd);
-
-    ret = i2c_master_cmd_begin(_i2c_port, cmd, I2C_TIMEOUT_MS/portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
-    
     return ret;
 }
 
 esp_err_t write8(uint8_t device, uint8_t addr, uint8_t d) {
-    esp_err_t ret;
+    uint8_t writeBuf[2] = {addr, d};
 
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (device << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, addr, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, d, NACK_VAL);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(_i2c_port, cmd, I2C_TIMEOUT_MS/portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
-
-    return ret;
+    return i2c_master_write_to_device(_i2c_port, device, writeBuf, sizeof(writeBuf), I2C_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
 esp_err_t writeTwoWords(uint8_t device, uint8_t addr, uint16_t word1, uint16_t word2) {
-    esp_err_t ret;
+    uint8_t writeBuf[5] = {addr, word1 & 0xff, word1 >> 8, word2 & 0xff, word2 >> 8};
 
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (device << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, addr, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, word1 & 0xff, ACK_VAL);
-    i2c_master_write_byte(cmd, word1 >> 8, NACK_VAL);
-    i2c_master_write_byte(cmd, word2 & 0xff, ACK_VAL);
-    i2c_master_write_byte(cmd, word2 >> 8, NACK_VAL);
-    i2c_master_stop(cmd);
-    ret = i2c_master_cmd_begin(_i2c_port, cmd, I2C_TIMEOUT_MS/portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
-
-    return ret;
+    return i2c_master_write_to_device(_i2c_port, device, writeBuf, sizeof(writeBuf), I2C_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
