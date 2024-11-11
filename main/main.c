@@ -35,5 +35,6 @@ void app_main(void)
     	ESP_LOGE(TAG, "Continuing without web interface.");
     }
 
-    led_driver_init(1200);
+    led_driver_init(1000);
+    led_driver_startInfiniteAnimation();
 }

@@ -49,7 +49,7 @@ void led_driver_init(unsigned short freqHz) {
     }
     xSemaphoreGive(sync_pca9685);
 
-    sync_animation_task = xSemaphoreCreateBinary();    
+    sync_animation_task = xSemaphoreCreateBinary();
 }
 
 void led_driver_cleanup() {
@@ -80,19 +80,24 @@ void led_driver_setNumLeds(u_int16_t num) {
 
 static void setPin(uint8_t channel, uint16_t pwm) {
     xSemaphoreTake(sync_pca9685, 100 / portTICK_PERIOD_MS);
+    // ESP_LOGI(TAG, "Setting channel %i to %i. Address 0x%02x. Pin %i.", channel, pwm, GET_ADDRESS(channel), GET_PIN(channel));
     pca9685_setPin(GET_ADDRESS(channel), GET_PIN(channel), pwm, false);
     xSemaphoreGive(sync_pca9685);
 }
 
 static void demoTask() {
-    static uint16_t const maxBrightness = 2000;
-    static uint8_t const maxStep = 200; // 10ms per step
-    static uint8_t step = 0;
-    const uint8_t stepsPerLed = maxStep / numLeds;
-    uint8_t stepInLed;
+    static uint16_t const maxBrightness = 500;
+    static uint16_t const maxStep = 800; // 10ms per step
+    static uint16_t step = 0;
+    const uint16_t stepsPerLed = maxStep / numLeds;
+    uint16_t stepInLed, lastPin, currentPin;
     uint16_t pwm;
 
+    lastPin = channelMap[step / stepsPerLed];
+
     xSemaphoreTake(sync_animation_task, portMAX_DELAY);
+
+    ESP_LOGI(TAG, "Running DEMO animation");
 
     while (1) {
         step = (step + 1) % maxStep;
@@ -103,14 +108,21 @@ static void demoTask() {
         } else {
             pwm = maxBrightness * (stepsPerLed - stepInLed) * 2 / stepsPerLed;
         }
+
+        currentPin = channelMap[step / stepsPerLed];
         
-        setPin(channelMap[step / stepsPerLed], pwm);
+        setPin(currentPin, pwm);
+
+        if (currentPin != lastPin) {
+            setPin(lastPin, 0);
+            lastPin = currentPin;
+        }
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
 void led_driver_startInfiniteAnimation() {
-    xTaskCreatePinnedToCore(demoTask, "ledAnimation", 1024, NULL, ANIM_TASK_PRIO, NULL, tskNO_AFFINITY);
+    xTaskCreatePinnedToCore(demoTask, "ledAnimation", 4096, NULL, ANIM_TASK_PRIO, NULL, tskNO_AFFINITY);
     xSemaphoreGive(sync_animation_task);
 }
