@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "html-minifier": "^4.0.0"
+  },
+  "name": "build",
+  "version": "1.0.0",
+  "description": "builds index.html from the source",
+  "type": "module",
+  "main": "build.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node build.js"
+  },
+  "author": "Dainius Vaiksnys",
+  "license": "ISC"
+}

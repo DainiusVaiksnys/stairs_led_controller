@@ -1,112 +1,164 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Laiptinės LED valdymas</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stairs LED Controller Configuration</title>
     <style>
-        /* Add your CSS styles here */
         body {
             font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
             text-align: center;
-        }
-        .container {
-            margin: 20px;
-        }
-        .button {
-            background-color: #3498db;
+            background-color: #333;
             color: #fff;
-            border: none;
-            padding: 10px 20px;
-            margin: 5px;
+            padding: 10px;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"],
+        input[type="number"],
+        select,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        input[type="range"] {
+          padding: 0;
+        }
+
+        button {
+            background-color: #333;
+            color: #fff;
             cursor: pointer;
         }
-        #brightnessSlider {
-            width: 80%;
+
+        button:hover {
+            background-color: #555;
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
-<body>
-    <h1>Laiptinės LED valdymas</h1>
-    <div class="container">
-        <h2 id="header-brightness">Šviesumas</h2>
-        <input type="range" min="0" max="255" value="25" class="slider" id="brightnessSlider">
-        <p>Šviesumas: <span id="brightnessValue">50</span>%</p>
-        <button class="button" id="level0">Išjungta</button>
-        <button class="button" id="level1">Žemas</button>
-        <button class="button" id="level2">Vidutinis</button>
-        <button class="button" id="level3">Aukštas</button>
-        <button class="button" id="level4">Ultra</button>
-        <h2>Automatinis Režimas</h2>
-        <label for="autoModeToggle">Įjungti / Išjungti:</label>
-        <input type="checkbox" id="autoModeToggle">
-    </div>
+<body onload="generateStairBindingButtons()">
+    <h1>Stairs LED Controller Configuration</h1>
 
-    <!-- JavaScript to handle the controls -->
+    <form id="ledConfigForm">
+        <label for="maxBrightness">Maximum Brightness:</label>
+        <input type="range" id="maxBrightness" name="maxBrightness" min="0" max="100" value="100">
+        <br><br>
+
+        <label for="animationSpeed">Animation Speed (Steps per Minute):</label>
+        <input type="number" id="animationSpeed" name="animationSpeed" min="0" value="60">
+        <br><br>
+
+        <label for="animationMode">Animation Mode:</label>
+        <select id="animationMode" name="animationMode" onchange="toggleStairFields()">
+            <option value="MODE_OFF">Off</option>
+            <option value="MODE_ON">On</option>
+            <option value="MODE_MOTION">Motion</option>
+            <option value="MODE_BINDING">Binding</option>
+            <option value="MODE_ANIMATION_WAVES">Animation Waves</option>
+            <option value="MODE_SOUND">Sound</option>
+        </select>
+        <br><br>
+
+        <div id="stairFields" style="display: none;">
+            <label for="numStairs">Number of Stairs:</label>
+            <input type="number" id="numStairs" name="numStairs" min="1" value="10" onchange="generateStairBindingButtons()">
+            <br><br>
+
+            <div id="stairBindingButtons">
+                <!-- Dynamic buttons will be generated here -->
+            </div>
+            <br><br>
+        </div>
+        
+        <input type="button" value="Apply" onclick="applySettings()">
+    </form>
+
+    <div id="status"></div>
+
     <script>
-// Get references to HTML elements
-const brightnessSlider = document.getElementById("brightnessSlider");
-const brightnessValue = document.getElementById("brightnessValue");
-const level0Button = document.getElementById("level0");
-const level1Button = document.getElementById("level1");
-const level2Button = document.getElementById("level2");
-const level3Button = document.getElementById("level3");
-const level4Button = document.getElementById("level4");
-const autoModeToggle = document.getElementById("autoModeToggle");
-const headerBrightness = document.getElementById("header-brightness");
+        function generateStairBindingButtons() {
+            var numStairs = parseInt(document.getElementById("numStairs").value);
+            var stairBindingButtons = document.getElementById("stairBindingButtons");
 
-const updateBrightness = function (value) {
-  const rangeSize = parseInt(brightnessSlider.max) + 1;
-  console.log(rangeSize, brightnessSlider.max);
-  brightnessValue.textContent = Math.ceil(
-    (100.0 * brightnessSlider.value) / rangeSize
-  );
-};
+						if (!stairBindingButtons) {
+            	return;
+            }
+            
+            // Clear any existing buttons
+            stairBindingButtons.innerHTML = "";
 
-// Update brightness value when the slider changes
-brightnessSlider.addEventListener("input", function () {
-  updateBrightness(brightnessSlider.value);
-});
+            for (var i = 1; i <= numStairs; i++) {
+                var button = document.createElement("button");                
+                button.type = "button";
+                button.innerHTML = "Stair " + i;
+                
+                let message = "Binding Stair " + i + " to output channel.";
+                button.addEventListener("click", function () {
+                    // Handle the binding logic when the button is clicked
+                    alert(message);
+                });
 
-// Set brightness level to predefined values when buttons are clicked
-level0Button.addEventListener("click", function () {
-  brightnessSlider.value = 0;
-  updateBrightness(brightnessSlider.value);
-});
+                stairBindingButtons.appendChild(button);
+            }
+        }
+        
+        function toggleStairFields() {
+            var animationMode = document.getElementById("animationMode").value;
+            var stairFields = document.getElementById("stairFields");
 
-level1Button.addEventListener("click", function () {
-  // Set brightness to a predefined low level (e.g., 25%)
-  brightnessSlider.value = 64;
-  updateBrightness(brightnessSlider.value);
-});
+            if (animationMode === "MODE_BINDING") {
+                stairFields.style.display = "block";
+            } else {
+                stairFields.style.display = "none";
+            }
+        }
 
-level2Button.addEventListener("click", function () {
-  // Set brightness to a predefined medium level (e.g., 50%)
-  brightnessSlider.value = 128;
-  updateBrightness(brightnessSlider.value);
-});
+        function applySettings() {
+            var maxBrightness = document.getElementById("maxBrightness").value;
+            var animationSpeed = document.getElementById("animationSpeed").value;
+            var animationMode = document.getElementById("animationMode").value;
 
-level3Button.addEventListener("click", function () {
-  // Set brightness to a predefined high level (e.g., 75%)
-  brightnessSlider.value = 192;
-  updateBrightness(brightnessSlider.value);
-});
+            var numStairs = document.getElementById("numStairs").value;
 
-level4Button.addEventListener("click", function () {
-  // Set brightness to a predefined ultra level (e.g., 100%)
-  brightnessSlider.value = 255;
-  updateBrightness(brightnessSlider.value);
-});
+            // Send these settings to your LED controller, e.g., through AJAX or WebSocket.
+            // Here, we'll just display the selected settings.
 
-// Toggle auto mode when the checkbox is clicked
-autoModeToggle.addEventListener("change", function () {
-  const isChecked = autoModeToggle.checked;
-  if (isChecked) {
-    headerBrightness.textContent = "Maksimalus šviesumas";
-  } else {
-    headerBrightness.textContent = "Šviesumas";
-  }
-});
+            var status = document.getElementById("status");
+            status.innerHTML = "Settings applied: Max Brightness - " + maxBrightness + 
+                               ", Animation Speed - " + animationSpeed + " Steps/Minute" + 
+                               ", Animation Mode - " + animationMode + 
+                               ", Number of Stairs - " + numStairs;
+        }
     </script>
 </body>
 </html>
-
